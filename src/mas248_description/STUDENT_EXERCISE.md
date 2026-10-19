@@ -50,6 +50,3 @@ Answer in one or two sentences for each:
 - RViz2 screenshot displaying both links, TCP and fixture.
 - Screenshot or copied terminal output confirming `base_link → tcp` and `base_link → fixture_link` transforms.
 - Short explanation of the new joint limit and fixed-frame behaviour.
-
-
-```
