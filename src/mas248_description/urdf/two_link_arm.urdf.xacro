@@ -78,7 +78,7 @@
     <origin xyz="${link1_length} 0 0" rpy="0 0 0"/>
     <axis xyz="0 0 1"/>
     <!-- EXERCISE 1: change joint2 limits to -0.80 ... +0.80 radians. -->
-    <limit lower="-1.57" upper="1.57" effort="10.0" velocity="1.0"/>
+    <limit lower="-0.80" upper="0.80" effort="10.0" velocity="1.0"/>
   </joint>
 
   <!-- TCP is rigidly attached at the end of link2. -->
@@ -92,6 +92,12 @@
     <parent link="link2"/>
     <child link="tcp"/>
     <origin xyz="${link2_length} 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <joint name="fixture_join" type="fixed">
+    <parent link="base_link"/>
+    <child link="fixture"/>
+    <box size="0.16 0.04 0.10"/>
   </joint>
 
   <!-- EXERCISE 2: add a NEW rigid fixture to the base (do not alter the TCP). -->
