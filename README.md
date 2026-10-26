@@ -18,6 +18,7 @@ Målet er en arbeidscelle med UR5 (sokkel, verktøy og TCP), kollisjonsfri beveg
 6. [Regler for repoet](#regler-for-repoet)
 7. [Feilsøking](#feilsøking)
 8. [Fremdrift](#fremdrift)
+9. [Lecture 9: MoveIt-planlegging og tegning av bilde](#lecture-9-moveit-planlegging-og-tegning-av-bilde)
 
 ---
 
@@ -281,7 +282,145 @@ Usikker? Spør i gruppa før du løser konflikten.
 ## Fremdrift
 
 - [x] **Milepæl 1:** ROS 2-miljø, workspace og prosjektpakke
-- [ ] **Milepæl 2:** Arbeidscellemodell (URDF/Xacro, sokkel, verktøy, TCP) vist i RViz2
+- [x] **Milepæl 2:** Arbeidscellemodell (URDF/Xacro, sokkel, verktøy, TCP) vist i RViz2
 - [ ] **Milepæl 3:** MoveIt 2-planlegging med kollisjonsobjekter i simulering
 - [ ] **Milepæl 4:** Kjøring på ekte UR5 via UR-driveren
 - [ ] Rapport, demovideo og eksperimentresultater
+
+---
+
+## Lecture 9: MoveIt-planlegging og tegning av bilde
+
+Kjeden er: bilde → OpenCV-konturer → TCP-mål (`/tmp/mas248_targets.json`) → MoveIt 2 Cartesian-baner → kjøring på mock-kontrollere i RViz2. **Alt her er kun simulering (mock hardware).** Ikke bruk dette mot den ekte UR5-en.
+
+### Pakker
+
+| Pakke | Innhold |
+|---|---|
+| `mas248_ur5e` | Arbeidscellen: UR5e, sokkel (`pedestal_link`), bord, spindel (`spindle_body`) og `tcp` |
+| `mas248_ur5e_moveit_config` | MoveIt-oppsett: SRDF, kinematikk, kontrollere og launch-filer |
+| `mas248_ur5e_demos` | Skript: bildekonvertering, RViz-markører, Del A-demoer og `run_picture` |
+
+TF-treet skal være én kjede: `world → pedestal_link → base_link → … → tool0 → spindle_body → tcp`.
+
+### Bygg
+
+Fra roten av workspacet (`~/mas248_ws`, eller der du har klonet repoet):
+
+```bash
+source /opt/ros/humble/setup.bash
+colcon build --symlink-install
+source install/setup.bash
+```
+
+Hver ny terminal må sources: `source /opt/ros/humble/setup.bash && source install/setup.bash`.
+
+### Terminaler som må kjøre
+
+Start dem i denne rekkefølgen og la dem stå:
+
+| Terminal | Kommando | Hva den gjør |
+|---|---|---|
+| 1 | `ros2 launch mas248_ur5e_moveit_config ros2_control.launch.py` | Mock-UR5e og kontrollere (`/joint_states`) |
+| 2 | `LIBGL_ALWAYS_SOFTWARE=1 ros2 launch mas248_ur5e_moveit_config moveit.launch.py` | MoveIt (`move_group`) og RViz2 |
+| 3 | `ros2 run mas248_ur5e_demos image_to_targets ... --rviz` (se under) | Lager målene og viser dem i RViz |
+| 4 | `ros2 run mas248_ur5e_demos ...` | Del A-demoer eller `run_picture` |
+
+Sjekk at alt svarer (skal gi fem `[OK]`):
+
+```bash
+ros2 run mas248_ur5e_demos check_stack
+```
+
+Ikke start `demo.launch.py` samtidig med terminal 1 og 2.
+
+### Del A: to mål og en hindring
+
+```bash
+ros2 run mas248_ur5e_demos add_cube                     # legg boks i planning scene
+ros2 run mas248_ur5e_demos move_two_targets             # bare planlegging
+ros2 run mas248_ur5e_demos move_two_targets --execute   # planlegg og kjør (mock)
+ros2 run mas248_ur5e_demos move_two_targets --mode tcp  # posemål i stedet for leddmål
+ros2 run mas248_ur5e_demos add_cube --remove            # fjern boksen igjen
+```
+
+Det samme kan gjøres i MotionPlanning-panelet i RViz (Scene-fanen for boks, Planning-fanen for mål). **Fjern boksen før Del B**, ellers står den i veien for tegningen.
+
+### Del B: tegn bildet
+
+**1. Lag TCP-mål fra bildet (terminal 3):**
+
+```bash
+ros2 run mas248_ur5e_demos image_to_targets pumpkin_outline.jpg \
+  --width-m 0.18 --center-x 0.55 --center-y 0 --center-z 0.46 \
+  --tcp-offset-mm 30 --max-contours 4 --max-points 40 --rviz --axis-every 4
+```
+
+Dette skriver `/tmp/mas248_targets.json` og publiserer markører til RViz til du trykker Ctrl+C. At terminalen står stille er normalt. Har JSON-filen allerede blitt laget, kan markørene vises alene med `ros2 run mas248_ur5e_demos show_targets_rviz --axis-every 4`.
+
+| Parameter | Betydning |
+|---|---|
+| `--width-m` | Bredden på hele bildet i meter |
+| `--center-x/y/z` | Bildets sentrum i `world` (meter) |
+| `--tcp-offset-mm` | TCP-høyde over tegneplanet. Sett til ca. 2 for at pennen skal ned til planet |
+| `--max-contours` | Antall konturer (kanter i bildet, ikke pennestrøk) |
+| `--max-points` | Maks antall punkter per kontur |
+
+**2. Se målene i RViz:**
+
+- Fixed Frame: `world`. MarkerArray på `/mas248/drawing_targets` er med i RViz-oppsettet. Mangler den: Add → By topic → `/mas248/drawing_targets` → MarkerArray.
+- Tegningen er liten og ligger rundt (0,55, 0, 0,46). Zoom inn, eller sett Views → Focal Point til `0.55, 0, 0.46` og Distance til `0.5`.
+- Under MarkerArray → Namespaces kan du slå av og på `MAS248_contour_paths`, `MAS248_image_bounds`, `MAS248_TCP_orientation_Z` osv. De blå Z-pilene skal peke **ned**.
+- Views → Type: TopDownOrtho gjør det lett å se om bildet er speilvendt.
+
+**3. Se bildebehandlingsstegene (WSL2):**
+
+```bash
+explorer.exe "$(wslpath -w ~/MAS248_Image_Stages/index.html)"
+```
+
+Eller lim inn `\\wsl.localhost\Ubuntu-22.04\home\<bruker>\MAS248_Image_Stages\index.html` i nettleseren i Windows.
+
+**4. Kjør tegningen (terminal 4):**
+
+```bash
+ros2 run mas248_ur5e_demos run_picture
+```
+
+| Flagg | Standard | Betydning |
+|---|---|---|
+| `--targets` | `/tmp/mas248_targets.json` | Målfilen |
+| `--max-strokes` | `0` (alle) | Tegn bare de N første strøkene |
+| `--plan-only` | av | Planlegg bare flyttingen til start, roboten beveger seg ikke |
+| `--lift` | `0.05` | Høyde for «pen-up» (m) |
+| `--max-step` | `0.005` | Interpolasjonssteg for Cartesian-banen (m) |
+| `--min-fraction` | `0.99` | Laveste fraction som godtas før kjøring |
+| `--max-joint-jump` | `0.3` | Største leddendring mellom to trajektoriepunkter (rad) |
+
+Slik virker `run_picture`:
+
+1. Løser IK for punktet over første strøk, med en albue-opp-seed og verktøyet pekende ned (samme som `home`), og flytter dit i leddrom.
+2. For hvert strøk følger den rette linjer (Cartesian): flytt over startpunktet, ned, langs konturen og opp.
+3. Hver bane sjekkes for fraction og leddhopp **før** den kjøres. Delvise baner kjøres aldri.
+
+Vellykket kjøring ender med `Stroke N done, draw fraction 1.000` for hvert strøk og `Drawing finished`. Lagre denne outputen til rapporten.
+
+### Feilsøking for Lecture 9
+
+| Problem | Løsning |
+|---|---|
+| `check_stack` gir `[MISS]` | Terminal 1 eller 2 kjører ikke, eller terminalen er ikke sourcet |
+| `Image 'pumpkin_outline.png' not found` | Bruk `pumpkin_outline.jpg`, eller bygg på nytt så `.png`-kopien installeres |
+| `No module named scripts.show_targets_rviz` | Bygg `mas248_ur5e_demos` på nytt og source igjen |
+| Ingen markører i RViz | Terminal 3 kjører ikke, feil topic, eller Fixed Frame er ikke `world` |
+| `Frame [image_center] does not exist` | Terminal 3 kjører ikke (den publiserer denne framen) |
+| `No collision-free IK` / lav fraction | Fjern boksen fra Del A (`add_cube --remove`), sjekk skala og senter, og prøv `--max-points` lavere |
+| `joint jump ... rad` | Armen vil snu seg midt i et strøk. Flytt bildet nærmere roboten eller gjør det mindre |
+| `ros2 topic ...` gir `!rclpy.ok()` | `ros2 daemon stop`, og prøv igjen |
+| RViz er svart eller krasjer (WSL) | Start med `LIBGL_ALWAYS_SOFTWARE=1` |
+
+### Kjente begrensninger
+
+- Konturene er kanter i bildet, ikke midtlinjer for pennen. En tykk strek blir derfor tegnet to ganger.
+- Mål og plassering er ikke kalibrert mot labcellen. Sokkel- og spindelmålene i URDF-en må kontrolleres mot de ekte målene.
+- `show_targets_rviz.py` manglet i den utdelte pakken og er skrevet av gruppen.
