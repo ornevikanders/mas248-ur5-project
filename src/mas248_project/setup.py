@@ -24,6 +24,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'run_picture = mas248_project.run_picture:main',
         ],
     },
 )

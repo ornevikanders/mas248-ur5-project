@@ -257,11 +257,30 @@ Usikker? Spør i gruppa før du løser konflikten.
 
 - ❌ Aldri commit `build/`, `install/` eller `log/` (de ligger i `.gitignore`).
 - ❌ Aldri `git push --force` til `main`.
+- ❌ Ikke commit utdelte forelesningsfiler (for eksempel `mas248_ur5e_demos` og `mas248_ur5e_moveit_config`).
 - ❌ Ikke commit ROS-bags (`.db3`) eller store videofiler. Legg dem i felles disk og lenk til dem.
 - ✅ Kjør `git pull` før du begynner å jobbe.
 - ✅ Kjør `colcon build` før du pusher.
 - ✅ Kommenter koden: forklar *hvorfor*, ikke bare *hva*.
 - ✅ Oppdater README når du legger til noe andre må vite om (nye launch-filer, avhengigheter osv.).
+
+---
+
+## Tegne bilde med `run_picture`
+
+`run_picture` er vårt eget skript i `mas248_project`. Det krever at kurspakkene `mas248_ur5e_demos` og `mas248_ur5e_moveit_config` ligger lokalt i `src/`. De skal ikke i Git, så legg dem i `.git/info/exclude`:
+
+```bash
+printf '%s\n' 'src/mas248_ur5e_demos/' 'src/mas248_ur5e_moveit_config/' >> .git/info/exclude
+```
+
+```bash
+ros2 run mas248_ur5e_demos image_to_targets pumpkin_outline.jpg --tcp-offset-mm 30
+ros2 run mas248_project run_picture             # bare planlegging, roboten står stille
+ros2 run mas248_project run_picture --execute   # planlegg og kjør (KUN mock)
+```
+
+Skriptet sjekker arbeidsområdet og at høyden med pennen oppe er minst 10 mm over tegneflaten. Deretter planlegger det alle strekene før noe kjøres, og godkjenner bare baner som er minst 99,9 % planlagt med høyst 0,3 rad endring i ett ledd mellom to punkter. **Ikke bruk det på ekte robot.** Det og `ARBEIDSOMRADE` er laget for mock-cellen.
 
 ---
 
