@@ -15,20 +15,40 @@
 
 <!-- Workcell: world -> pedestal_link -> UR5e ... tool0 -> spindle_body -> tcp -->
 
+  <!-- ===== Measured lab geometry: change values HERE only ===== -->
+  <!-- Pedestal: height measured in the lab (0.31 m). Width NOT measured yet (placeholder). -->
+  <xacro:property name="pedestal_height" value="0.31"/>
+  <xacro:property name="pedestal_width"  value="0.20"/>
+
+  <!-- Paper centre in world, measured from the axis marks on the robot base: (-0.43, -0.06) m.
+       ASSUMPTION: the marks follow UR's 'base' frame (teach pendant), which is rotated pi about z
+       relative to ROS base_link/world, so x and y change sign. Verify with a pendant jog test
+       or 'ros2 run tf2_ros tf2_echo world tcp'. If wrong: set -0.43 / -0.06. -->
+  <xacro:property name="paper_x" value="0.43"/>
+  <xacro:property name="paper_y" value="0.06"/>
+
+  <!-- Table: top is flush with the top of the pedestal (measured).
+       Length/width NOT measured yet: placeholder centred under the paper.
+       Keep paper_x - table_length_x/2 >= pedestal_width/2 so the table does not overlap the pedestal. -->
+  <xacro:property name="table_top_z"     value="${pedestal_height}"/>
+  <xacro:property name="table_thickness" value="0.05"/>
+  <xacro:property name="table_length_x"  value="0.60"/>
+  <xacro:property name="table_width_y"   value="0.60"/>
+
   <!-- Workcell root -->
   <link name="world"/>  <!-- I am dummy -->
   <link name="tcp"/> <!-- I am also dummy -->
 
-  <!-- Pedestal: built directly into this workcell, 0.70 m high, top face = robot base -->
+  <!-- Pedestal: built directly into this workcell, top face = robot base -->
   <link name="pedestal_link">
     <visual>
-      <origin xyz="0 0 0.35" rpy="0 0 0"/>
-      <geometry><box size="0.20 0.20 0.70"/></geometry>
+      <origin xyz="0 0 ${pedestal_height/2}" rpy="0 0 0"/>
+      <geometry><box size="${pedestal_width} ${pedestal_width} ${pedestal_height}"/></geometry>
       <material name="pedestal"><color rgba="0.30 0.30 0.32 1.0"/></material>
     </visual>
     <collision>
-      <origin xyz="0 0 0.35" rpy="0 0 0"/>
-      <geometry><box size="0.20 0.20 0.70"/></geometry>
+      <origin xyz="0 0 ${pedestal_height/2}" rpy="0 0 0"/>
+      <geometry><box size="${pedestal_width} ${pedestal_width} ${pedestal_height}"/></geometry>
     </collision>
   </link>
 
@@ -85,20 +105,20 @@
     input_recipe_filename=""
     output_recipe_filename=""
   >
-    <!-- Mount the robot on top of the pedestal use right dimensions-->
-    <origin xyz="0 0 0.70" rpy="0 0 0"/>
+    <!-- Mount the robot on top of the pedestal -->
+    <origin xyz="0 0 ${pedestal_height}" rpy="0 0 0"/>
   </xacro:ur_robot>
 
-  <!-- Simple work table FOR FUN and LEARNING-->
+  <!-- Work table carrying the paper; top surface = drawing plane (z = table_top_z) -->
   <link name="table_link">
     <visual>
-      <origin xyz="0.85 0 0.40" rpy="0 0 0"/>
-      <geometry><box size="1.20 0.80 0.05"/></geometry>
+      <origin xyz="${paper_x} ${paper_y} ${table_top_z - table_thickness/2}" rpy="0 0 0"/>
+      <geometry><box size="${table_length_x} ${table_width_y} ${table_thickness}"/></geometry>
       <material name="table"><color rgba="0.75 0.75 0.78 1.0"/></material>
     </visual>
     <collision>
-      <origin xyz="0.85 0 0.40" rpy="0 0 0"/>
-      <geometry><box size="1.20 0.80 0.05"/></geometry>
+      <origin xyz="${paper_x} ${paper_y} ${table_top_z - table_thickness/2}" rpy="0 0 0"/>
+      <geometry><box size="${table_length_x} ${table_width_y} ${table_thickness}"/></geometry>
     </collision>
   </link>
   <joint name="world_to_table" type="fixed">

@@ -21,9 +21,22 @@ MAKS_LEDDSTEG = 0.3
 # OMPL er tilfeldig, sa et nytt forsok gir en ny transport og en ny tegnebane.
 ANTALL_FORSOK = 3
 
+# Malt i labben (samme verdier som i ur5e_workcell.urdf.xacro):
+# arkets senter i world (x, y) og tegneflaten (bordplata = toppen av sokkelen).
+# ANTAGELSE om fortegn: se kommentaren ved paper_x/paper_y i xacro-fila.
+ARK_SENTER = (0.43, 0.06)
+TEGNEFLATE_Z = 0.31
+
+# Halv utstrekning rundt arksenteret (m). Dekker et A4-ark (0.297 x 0.210) uansett retning.
+ARK_HALV = 0.15
+
 # Tillatt omrade for TCP-mal i world (meter): (min, maks) per akse.
-# Valgt for mock-cellen: foran roboten, over bordplata (z = 0.425), med margin til rekkevidden.
-ARBEIDSOMRADE = {'x': (0.30, 0.75), 'y': (-0.35, 0.35), 'z': (0.43, 0.80)}
+# Avledet fra arket, slik at feil --center-x/-y/-z til image_to_targets blir stoppet.
+ARBEIDSOMRADE = {
+    'x': (ARK_SENTER[0] - ARK_HALV, ARK_SENTER[0] + ARK_HALV),
+    'y': (ARK_SENTER[1] - ARK_HALV, ARK_SENTER[1] + ARK_HALV),
+    'z': (TEGNEFLATE_Z - 0.005, TEGNEFLATE_Z + 0.20),   # 5 mm toleranse under flaten
+}
 
 # Minste hoyde for penn oppe over tegneflaten (m). Malene i JSON-fila er penn oppe-hoyden,
 # sa --tcp-offset-mm 0 ville gitt transport helt nede pa flaten.
