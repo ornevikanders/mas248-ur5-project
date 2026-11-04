@@ -8,6 +8,13 @@ set(DERIVED_CONFIG "${CMAKE_CURRENT_BINARY_DIR}/config/ur5e")
 if(NOT EXISTS "${CANONICAL_XACRO}")
   message(FATAL_ERROR "Expected MAS248 Lecture 8 workcell: ${CANONICAL_XACRO}")
 endif()
+# Re-run CMake (and the generator below) automatically when the workcell,
+# the generator or the hardware defaults change. Without this an edited
+# workcell is silently ignored until a forced reconfigure.
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+  "${CANONICAL_XACRO}"
+  "${CMAKE_CURRENT_SOURCE_DIR}/scripts/prepare_description.py"
+  "${CMAKE_CURRENT_SOURCE_DIR}/config/real_robot_defaults.yaml")
 # This generator writes ONLY into build/, never to any Lecture 8/9 source.
 execute_process(
   COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/prepare_description.py"
@@ -24,7 +31,8 @@ install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/config/" DESTINATION share/${PROJ
 install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/config/" DESTINATION share/${PROJECT_NAME}/config)
 install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/urdf" "${CMAKE_CURRENT_SOURCE_DIR}/launch"
         DESTINATION share/${PROJECT_NAME})
-install(PROGRAMS scripts/validate_description.py scripts/validate_stack.py
-        scripts/run_picture_real.py scripts/preflight.py
-        DESTINATION lib/${PROJECT_NAME})
+# The handed-out ZIP had an empty scripts/ folder. validate_description.py,
+# validate_stack.py, run_picture_real.py and preflight.py do not exist yet;
+# add them here when they do. The launch files already validate IP,
+# calibration, workcell links and the real ros2_control plugin.
 ament_package()
