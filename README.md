@@ -97,6 +97,8 @@ source ~/mas248_ws/install/setup.bash
 
 ## Bygg og kjør
 
+Steg-for-steg for å tegne i simulering og på den ekte roboten: se [`KJORING.md`](KJORING.md).
+
 ```bash
 cd ~/mas248_ws
 colcon build --symlink-install
