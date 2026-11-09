@@ -2,7 +2,8 @@
 # Based on the official Universal Robots Humble ur_controllers.yaml.
 # Compare with the version installed on each lab computer before hardware use.
 # https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/humble/ur_robot_driver/config
-# Values with $(var ...) are expanded by vendor launch (ParameterFile allow_substs).
+# Values with var substitutions are expanded by vendor launch (ParameterFile allow_substs).
+# Do not write the substitution syntax in comments: it is expanded here too and fails.
 controller_manager:
   ros__parameters:
     joint_state_broadcaster:
