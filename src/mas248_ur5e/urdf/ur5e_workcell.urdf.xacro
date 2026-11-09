@@ -20,10 +20,10 @@
   <xacro:property name="pedestal_height" value="0.31"/>
   <xacro:property name="pedestal_width"  value="0.20"/>
 
-  <!-- Paper centre in world, measured from the axis marks on the robot base: (-0.43, -0.06) m.
-       ASSUMPTION: the marks follow UR's 'base' frame (teach pendant), which is rotated pi about z
-       relative to ROS base_link/world, so x and y change sign. Verify with a pendant jog test
-       or 'ros2 run tf2_ros tf2_echo world tcp'. If wrong: set -0.43 / -0.06. -->
+  <!-- Paper centre in world: (+0.43, +0.06) m. Measured from the axis marks on the robot base
+       as (-0.43, -0.06); the marks follow UR's 'base' frame (teach pendant), which is rotated pi
+       about z relative to ROS base_link/world, so x and y change sign.
+       VERIFIED in the lab 2026-11-09: the paper lies at positive x and y in world. -->
   <xacro:property name="paper_x" value="0.43"/>
   <xacro:property name="paper_y" value="0.06"/>
 

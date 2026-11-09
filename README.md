@@ -281,7 +281,7 @@ ros2 run mas248_project run_picture             # bare planlegging, roboten stå
 ros2 run mas248_project run_picture --execute   # planlegg og kjør (KUN mock)
 ```
 
-Skriptet sjekker arbeidsområdet og at høyden med pennen oppe er minst 10 mm over tegneflaten. Deretter planlegger det alle strekene før noe kjøres, og godkjenner bare baner som er minst 99,9 % planlagt med høyst 0,3 rad endring i ett ledd mellom to punkter. **Ikke bruk det på ekte robot.** `ARBEIDSOMRADE` er avledet fra arkets målte plassering (senter `(0.43, 0.06)` m i `world`, tegneflate `z = 0.31` m). Fortegnet på x/y er en antagelse som må verifiseres i labben, se kommentaren ved `paper_x` i `ur5e_workcell.urdf.xacro`.
+Skriptet sjekker arbeidsområdet og at høyden med pennen oppe er minst 10 mm over tegneflaten. Deretter planlegger det alle strekene før noe kjøres, og godkjenner bare baner som er minst 99,9 % planlagt med høyst 0,3 rad endring i ett ledd mellom to punkter. **Ikke bruk det på ekte robot.** `ARBEIDSOMRADE` er avledet fra arkets målte plassering (senter `(0.43, 0.06)` m i `world`, tegneflate `z = 0.31` m). Fortegnet (positiv x og y) er bekreftet i labben, se kommentaren ved `paper_x` i `ur5e_workcell.urdf.xacro`.
 
 ---
 

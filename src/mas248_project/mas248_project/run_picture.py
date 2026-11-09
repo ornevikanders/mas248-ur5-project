@@ -23,7 +23,7 @@ ANTALL_FORSOK = 3
 
 # Malt i labben (samme verdier som i ur5e_workcell.urdf.xacro):
 # arkets senter i world (x, y) og tegneflaten (bordplata = toppen av sokkelen).
-# ANTAGELSE om fortegn: se kommentaren ved paper_x/paper_y i xacro-fila.
+# Fortegnet (positiv x og y) er bekreftet i labben 2026-11-09, se paper_x/paper_y i xacro-fila.
 ARK_SENTER = (0.43, 0.06)
 TEGNEFLATE_Z = 0.31
 
