@@ -20,6 +20,7 @@ Kjor:  ros2 run mas248_project touch_test              (bare planlegg)
        ros2 run mas248_project touch_test --execute --z 0.002   (stopp 2 mm over)
 """
 import argparse
+import math
 
 import rclpy
 from rclpy.node import Node
@@ -108,7 +109,10 @@ def main():
     try:
         # Planlegg hele kjeden for noe kjores: hvert steg starter der forrige slapp.
         start = les_leddvinkler(node)                  # robotens stilling na
+        les_start = list(start)
         albue_start = start[JOINTS.index('elbow_joint')]
+        log.info('Leddvinkler na (grader): ' + ', '.join(f'{n.split("_joint")[0]} {math.degrees(v):.0f}'
+                                                        for n, v in zip(JOINTS, start)))
         planer = []
         for navn, hoyde, _ in steg:
             mal = make_pose(args.x, args.y, hoyde)     # pennen rett ned, tcp x langs world x
@@ -120,9 +124,19 @@ def main():
                 plan = svar.solution
                 slutt = siste_leddvinkler(plan)
             else:
-                slutt = ik_naer(node, mal, start)
-                if (slutt[JOINTS.index('elbow_joint')] > 0) != (albue_start > 0):
-                    log.error(f'{navn}: IK-losningen har albuen pa den andre siden. Avbryter.')
+                # IK kan av og til hoppe til en annen losning: prov noen ganger fra samme start
+                ie = JOINTS.index('elbow_joint')
+                for forsok in range(1, 6):
+                    slutt = ik_naer(node, mal, start)
+                    if (slutt[ie] > 0) == (albue_start > 0):
+                        break
+                    log.warn(f'{navn}: IK-forsok {forsok} ga albue {math.degrees(slutt[ie]):.0f} grader '
+                             f'(armen har {math.degrees(albue_start):.0f}), prover igjen')
+                else:
+                    log.error(f'{navn}: fant ingen IK-losning med albuen pa samme side som na '
+                              f'({math.degrees(albue_start):.0f} grader). Leddvinkler na (grader): '
+                              + ', '.join(f'{math.degrees(v):.0f}' for v in les_start)
+                              + '. Flytt armen til home i RViz og prov igjen.')
                     return
                 plan = move_group(node, joints=slutt, execute=False,
                                   start_joint_positions=start).planned_trajectory
