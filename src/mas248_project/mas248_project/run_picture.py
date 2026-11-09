@@ -85,12 +85,23 @@ def siste_leddvinkler(bane):
     return [vinkel_for[navn] for navn in JOINTS]
 
 
+def planlegg_transport(node, mal, start_ledd):
+    """Transport til penn oppe over forste punkt i neste strek.
+    Forst en rett linje (cartesian): armen beholder stillingen sin og flytter pennen
+    rett bortover i penn oppe-hoyde. Bare hvis det ikke gar, brukes fri bevegelse (OMPL),
+    som er tilfeldig og kan ta en stor omvei."""
+    svar = cartesian(node, [mal], start_joint_positions=start_ledd, jump_threshold=0.0)
+    if svar.fraction >= 0.999:
+        return svar.solution, 'rett linje'
+    return move_group(node, pose=mal, execute=False,
+                      start_joint_positions=start_ledd).planned_trajectory, 'OMPL (reserve)'
+
+
 def planlegg_strek(node, poser, flate_z, start_ledd):
     """Planlegger (uten a kjore) en hel strek fra start_ledd.
-    Returnerer (transport, tegning, andel, slutt_ledd)."""
-    # 1) Transport: fri bevegelse (OMPL) til penn oppe over forste punkt
-    transport = move_group(node, pose=poser[0], execute=False,
-                           start_joint_positions=start_ledd).planned_trajectory
+    Returnerer (transport, tegning, andel, slutt_ledd, transporttype)."""
+    # 1) Transport til penn oppe over forste punkt
+    transport, transporttype = planlegg_transport(node, poser[0], start_ledd)
     etter_transport = siste_leddvinkler(transport)
 
     # 2) Tegning: rett ned, langs streken pa flaten, rett opp
@@ -99,7 +110,7 @@ def planlegg_strek(node, poser, flate_z, start_ledd):
     svar = cartesian(node, veipunkter, start_joint_positions=etter_transport,
                      jump_threshold=0.0)
 
-    return transport, svar.solution, svar.fraction, siste_leddvinkler(svar.solution)
+    return transport, svar.solution, svar.fraction, siste_leddvinkler(svar.solution), transporttype
 
 
 def storste_leddsteg(bane):
@@ -123,14 +134,15 @@ def planlegg_alle(node, strek_liste, flate_z, start_ledd, log):
         for forsok in range(1, ANTALL_FORSOK + 1):
             hvor = f'Strek {i}, forsok {forsok}/{ANTALL_FORSOK}'
             try:
-                transport, tegning, andel, slutt = planlegg_strek(node, poser, flate_z, ledd)
+                transport, tegning, andel, slutt, transporttype = planlegg_strek(
+                    node, poser, flate_z, ledd)
             except RuntimeError as feil:
                 log.warn(f'{hvor}: planlegging feilet: {feil}')
                 continue                                 # prov igjen
 
             steg_t = storste_leddsteg(transport)
             steg_d = storste_leddsteg(tegning)
-            log.info(f'{hvor}: andel {andel:.3f}, storste leddsteg '
+            log.info(f'{hvor}: transport {transporttype}, andel {andel:.3f}, storste leddsteg '
                      f'transport {steg_t:.3f} rad / tegning {steg_d:.3f} rad')
 
             if andel < 0.999:
