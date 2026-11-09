@@ -35,6 +35,13 @@
   <xacro:property name="table_length_x"  value="0.60"/>
   <xacro:property name="table_width_y"   value="0.60"/>
 
+  <!-- Paper: A4 lying on the table, centred on (paper_x, paper_y). Long side along world x;
+       swap the two values if the sheet is turned. Visual only (no collision), so the pen
+       can touch it; 1 mm thick so it shows on top of the table in RViz. -->
+  <xacro:property name="paper_size_x"    value="0.297"/>
+  <xacro:property name="paper_size_y"    value="0.210"/>
+  <xacro:property name="paper_thickness" value="0.001"/>
+
   <!-- Workcell root -->
   <link name="world"/>  <!-- I am dummy -->
   <link name="tcp"/> <!-- I am also dummy -->
@@ -162,6 +169,20 @@
     <parent link="world"/>
     <child link="table_link"/>
     <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <!-- Paper sheet on the table (visual only) -->
+  <link name="paper_link">
+    <visual>
+      <origin xyz="0 0 ${paper_thickness/2}" rpy="0 0 0"/>
+      <geometry><box size="${paper_size_x} ${paper_size_y} ${paper_thickness}"/></geometry>
+      <material name="paper"><color rgba="0.97 0.97 0.95 1.0"/></material>
+    </visual>
+  </link>
+  <joint name="table_to_paper" type="fixed">
+    <parent link="table_link"/>
+    <child link="paper_link"/>
+    <origin xyz="${paper_x} ${paper_y} ${table_top_z}" rpy="0 0 0"/>
   </joint>
 
 </robot>
