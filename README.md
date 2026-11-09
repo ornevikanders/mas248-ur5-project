@@ -276,12 +276,12 @@ printf '%s\n' 'src/mas248_ur5e_demos/' 'src/mas248_ur5e_moveit_config/' >> .git/
 
 ```bash
 ros2 run mas248_ur5e_demos image_to_targets pumpkin_outline.jpg --tcp-offset-mm 30 \
-  --center-x 0.43 --center-y 0.06 --center-z 0.31
+  --center-x 0.43 --center-y 0.06 --center-z 0.0
 ros2 run mas248_project run_picture             # bare planlegging, roboten står stille
 ros2 run mas248_project run_picture --execute   # planlegg og kjør (KUN mock)
 ```
 
-Skriptet sjekker arbeidsområdet og at høyden med pennen oppe er minst 10 mm over tegneflaten. Deretter planlegger det alle strekene før noe kjøres, og godkjenner bare baner som er minst 99,9 % planlagt med høyst 0,3 rad endring i ett ledd mellom to punkter. **Ikke bruk det på ekte robot.** `ARBEIDSOMRADE` er avledet fra arkets målte plassering (senter `(0.43, 0.06)` m i `world`, tegneflate `z = 0.31` m). Fortegnet (positiv x og y) er bekreftet i labben, se kommentaren ved `paper_x` i `ur5e_workcell.urdf.xacro`.
+Skriptet sjekker arbeidsområdet og at høyden med pennen oppe er minst 10 mm over tegneflaten. Deretter planlegger det alle strekene før noe kjøres, og godkjenner bare baner som er minst 99,9 % planlagt med høyst 0,3 rad endring i ett ledd mellom to punkter. **Ikke bruk det på ekte robot.** `ARBEIDSOMRADE` er avledet fra arkets målte plassering (senter `(0.43, 0.06)` m i `world`, tegneflate `z = 0` m: sokkelen og arket står på samme bord, robotfoten er 0,31 m over). Fortegnet (positiv x og y) er bekreftet i labben, se kommentaren ved `paper_x` i `ur5e_workcell.urdf.xacro`.
 
 ---
 

@@ -23,7 +23,7 @@ def generate_launch_description():
     def inkluder(navn):
         return IncludeLaunchDescription(PythonLaunchDescriptionSource(str(moveit_launch / navn)))
 
-    flate_z = DeclareLaunchArgument('flate_z', default_value='0.31',
+    flate_z = DeclareLaunchArgument('flate_z', default_value='0.0',
                                     description='Tegneflatens hoyde i world (m) for pen_trace')
     return LaunchDescription([
         flate_z,

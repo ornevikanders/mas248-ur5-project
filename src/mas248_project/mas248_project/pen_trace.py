@@ -6,7 +6,7 @@ MarkerArray pa /mas248/pen_trace (ramme world). Legg til en MarkerArray-visning 
 det topicet i RViz for a se tegningen.
 
 Kjor:  ros2 run mas248_project pen_trace
-       ros2 run mas248_project pen_trace --ros-args -p flate_z:=0.31
+       ros2 run mas248_project pen_trace --ros-args -p flate_z:=0.0
 """
 import math
 
@@ -29,8 +29,8 @@ def avstand(a, b):
 class PennSpor(Node):
     def __init__(self):
         super().__init__('mas248_pen_trace')
-        # Tegneflaten i world (m): toppen av bordet, samme som --center-z til image_to_targets
-        self.flate_z = self.declare_parameter('flate_z', 0.31).value
+        # Tegneflaten i world (m): bordflaten, samme som --center-z til image_to_targets
+        self.flate_z = self.declare_parameter('flate_z', 0.0).value
         # Pennen regnes som nede nar TCP-en er hoyst sa mye over flaten (m)
         self.toleranse = self.declare_parameter('toleranse', 0.003).value
         # Strekbredde i RViz (m), omtrent som en tusj

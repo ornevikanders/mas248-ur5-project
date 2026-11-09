@@ -16,9 +16,18 @@
 <!-- Workcell: world -> pedestal_link -> UR5e ... tool0 -> spindle_body -> tcp -->
 
   <!-- ===== Measured lab geometry: change values HERE only ===== -->
-  <!-- Pedestal: height measured in the lab (0.31 m). Width NOT measured yet (placeholder). -->
-  <xacro:property name="pedestal_height" value="0.31"/>
-  <xacro:property name="pedestal_width"  value="0.20"/>
+  <!-- world = the table surface under the pedestal. The pedestal stands ON the table and the
+       paper lies on the same table, so the drawing plane is z = 0 and the robot base is
+       pedestal_height above it (photo of the lab cell 2026-11-09).
+       Pedestal: height measured in the lab (0.31 m, table to robot base). It is a round
+       aluminium column on a square foot plate with a round top plate; those sizes are
+       NOT measured (placeholders read from the photo). -->
+  <xacro:property name="pedestal_height"      value="0.31"/>
+  <xacro:property name="pedestal_radius"      value="0.08"/>
+  <xacro:property name="pedestal_foot_size"   value="0.30"/>
+  <xacro:property name="pedestal_foot_height" value="0.015"/>
+  <xacro:property name="pedestal_top_radius"  value="0.10"/>
+  <xacro:property name="pedestal_top_height"  value="0.015"/>
 
   <!-- Paper centre in world: (+0.43, +0.06) m. Measured from the axis marks on the robot base
        as (-0.43, -0.06); the marks follow UR's 'base' frame (teach pendant), which is rotated pi
@@ -27,25 +36,26 @@
   <xacro:property name="paper_x" value="0.43"/>
   <xacro:property name="paper_y" value="0.06"/>
 
-  <!-- Table: top is flush with the top of the pedestal (measured).
-       Length/width NOT measured yet: placeholder centred under the paper.
-       Keep paper_x - table_length_x/2 >= pedestal_width/2 so the table does not overlap the pedestal. -->
-  <xacro:property name="table_top_z"     value="${pedestal_height}"/>
+  <!-- Table: one table under both the pedestal and the paper; its top is world z = 0.
+       Size and position NOT measured (placeholder: reaches behind the pedestal and well
+       past the paper). -->
+  <xacro:property name="table_top_z"     value="0.0"/>
   <xacro:property name="table_thickness" value="0.05"/>
-  <xacro:property name="table_length_x"  value="0.60"/>
-  <xacro:property name="table_width_y"   value="0.60"/>
+  <xacro:property name="table_length_x"  value="1.40"/>
+  <xacro:property name="table_width_y"   value="1.20"/>
+  <xacro:property name="table_center_x"  value="0.30"/>
+  <xacro:property name="table_center_y"  value="0.0"/>
 
-  <!-- Keep-out zone: nothing on the robot may go below the table top, anywhere around the
-       robot (gap between pedestal and table, beside the table, the floor). Extra collision
-       box on table_link, no visual. Its top is keepout_margin below the table top so the
-       robot base (which sits at table_top_z) does not touch it. It overlaps the pedestal,
-       which is fine: the SRDF disables pedestal_link/table_link collisions ("Never"). -->
+  <!-- Keep-out zone: nothing on the robot may go below the table top, also outside the
+       modelled table. Extra collision box on table_link, no visual, from keepout_depth below
+       the table top up to keepout_margin below it. -->
   <xacro:property name="keepout_size"   value="2.0"/>
+  <xacro:property name="keepout_depth"  value="0.30"/>
   <xacro:property name="keepout_margin" value="0.01"/>
 
   <!-- Paper: A4 lying on the table, centred on (paper_x, paper_y). Long side along world y
-       (across in front of the robot): x spans 0.325..0.535 m, so the near edge stays 22 cm
-       from the pedestal and the reach varies less than with the long side along x.
+       (across in front of the robot): x spans 0.325..0.535 m, so the near edge stays clear
+       of the pedestal foot and the reach varies less than with the long side along x.
        Place the real sheet the same way. Visual only (no collision), so the pen can touch it;
        1 mm thick so it shows on top of the table in RViz. -->
   <xacro:property name="paper_size_x"    value="0.210"/>
@@ -56,66 +66,109 @@
   <link name="world"/>  <!-- I am dummy -->
   <link name="tcp"/> <!-- I am also dummy -->
 
-  <!-- Pedestal: built directly into this workcell, top face = robot base -->
+  <!-- Pedestal: square foot plate on the table, round column, round top plate = robot base -->
   <link name="pedestal_link">
     <visual>
+      <origin xyz="0 0 ${pedestal_foot_height/2}" rpy="0 0 0"/>
+      <geometry><box size="${pedestal_foot_size} ${pedestal_foot_size} ${pedestal_foot_height}"/></geometry>
+      <material name="pedestal_foot"><color rgba="0.45 0.45 0.47 1.0"/></material>
+    </visual>
+    <visual>
       <origin xyz="0 0 ${pedestal_height/2}" rpy="0 0 0"/>
-      <geometry><box size="${pedestal_width} ${pedestal_width} ${pedestal_height}"/></geometry>
-      <material name="pedestal"><color rgba="0.30 0.30 0.32 1.0"/></material>
+      <geometry><cylinder radius="${pedestal_radius}" length="${pedestal_height}"/></geometry>
+      <material name="pedestal"><color rgba="0.78 0.79 0.81 1.0"/></material>
+    </visual>
+    <visual>
+      <origin xyz="0 0 ${pedestal_height - pedestal_top_height/2}" rpy="0 0 0"/>
+      <geometry><cylinder radius="${pedestal_top_radius}" length="${pedestal_top_height}"/></geometry>
+      <material name="pedestal"/>
     </visual>
     <collision>
+      <origin xyz="0 0 ${pedestal_foot_height/2}" rpy="0 0 0"/>
+      <geometry><box size="${pedestal_foot_size} ${pedestal_foot_size} ${pedestal_foot_height}"/></geometry>
+    </collision>
+    <collision>
       <origin xyz="0 0 ${pedestal_height/2}" rpy="0 0 0"/>
-      <geometry><box size="${pedestal_width} ${pedestal_width} ${pedestal_height}"/></geometry>
+      <geometry><cylinder radius="${pedestal_top_radius}" length="${pedestal_height}"/></geometry>
     </collision>
   </link>
 
-  <!-- Pen tool and TCP, expressed in tool0 (the UR tool flange, same frame as the pendant TCP).
-       TCP measured in the lab 2026-11-09: x = 0.10 m, z = 0.065 m, no rotation (tcp z = tool0 z). -->
+  <!-- Pen tool and TCP, expressed in tool0 (the UR tool flange, same frame as the pendant TCP:
+       z out of the flange). TCP position measured in the lab 2026-11-09: x = 0.10 m, z = 0.065 m.
+       The pen does NOT point out of the flange: it hangs from the holder at right angles to the
+       flange, along tool0 +x (photo of the lab cell). The TCP frame is therefore turned 90 deg
+       about tool0 y so that tcp z points along the pen towards the tip; image_to_targets then
+       points tcp z down into the paper. If the pendant TCP shows a rotation, use that instead.
+       Tool sizes are NOT measured (placeholders read from the photo):
+         adapter ring on the flange, gripper plate, black pen holder box, green pen, light tip. -->
   <xacro:property name="tcp_x" value="0.10"/>
   <xacro:property name="tcp_z" value="0.065"/>
-  <!-- Tool shape NOT measured (placeholders): a box on the flange reaching out past the TCP,
-       and a pen hanging down from the end of the box with a thin tip exactly at the TCP.
-       Box: x from -box_back to tcp_x + box_front, z from 0 to box_height (flange side up).
-       The pen collision stops pen_clearance above the TCP so pen-down poses on the table
-       are not reported as collisions; the thin tip is visual only. -->
-  <xacro:property name="box_back"      value="0.03"/>
-  <xacro:property name="box_front"     value="0.03"/>
-  <xacro:property name="box_width"     value="0.05"/>
-  <xacro:property name="box_height"    value="0.03"/>
-  <xacro:property name="pen_radius"    value="0.006"/>
-  <xacro:property name="tip_radius"    value="0.002"/>
-  <xacro:property name="tip_length"    value="0.008"/>
-  <xacro:property name="pen_clearance" value="0.008"/>
-  <xacro:property name="box_length"    value="${box_back + tcp_x + box_front}"/>
-  <xacro:property name="box_center_x"  value="${(tcp_x + box_front - box_back) / 2}"/>
-  <xacro:property name="pen_length"    value="${tcp_z - box_height - tip_length}"/>
+  <xacro:property name="ring_radius"     value="0.032"/>
+  <xacro:property name="ring_length"     value="0.020"/>
+  <xacro:property name="plate_size_x"    value="0.075"/>
+  <xacro:property name="plate_size_y"    value="0.060"/>
+  <xacro:property name="plate_thickness" value="0.020"/>
+  <xacro:property name="holder_size_x"   value="0.060"/>
+  <xacro:property name="holder_size_y"   value="0.055"/>
+  <xacro:property name="holder_size_z"   value="0.050"/>
+  <xacro:property name="holder_center_x" value="0.005"/>
+  <xacro:property name="pen_radius"      value="0.0075"/>
+  <xacro:property name="tip_radius"      value="0.003"/>
+  <xacro:property name="tip_length"      value="0.012"/>
+  <xacro:property name="pen_clearance"   value="0.008"/>
+  <!-- derived -->
+  <xacro:property name="plate_z0"     value="${ring_length}"/>
+  <xacro:property name="holder_z0"    value="${ring_length + plate_thickness}"/>
+  <xacro:property name="holder_end_x" value="${holder_center_x + holder_size_x / 2}"/>
+  <xacro:property name="pen_length"   value="${tcp_x - tip_length - holder_end_x}"/>
 
   <link name="spindle_body">
-    <!-- tool box -->
+    <!-- adapter ring on the flange -->
     <visual>
-      <origin xyz="${box_center_x} 0 ${box_height / 2}" rpy="0 0 0"/>
-      <geometry><box size="${box_length} ${box_width} ${box_height}"/></geometry>
-      <material name="spindle"><color rgba="0.85 0.45 0.10 1.0"/></material>
+      <origin xyz="0 0 ${ring_length / 2}" rpy="0 0 0"/>
+      <geometry><cylinder radius="${ring_radius}" length="${ring_length}"/></geometry>
+      <material name="tool_ring"><color rgba="0.80 0.80 0.82 1.0"/></material>
     </visual>
-    <!-- pen body from the underside of the box -->
+    <!-- gripper plate -->
     <visual>
-      <origin xyz="${tcp_x} 0 ${box_height + pen_length / 2}" rpy="0 0 0"/>
+      <origin xyz="0 0 ${plate_z0 + plate_thickness / 2}" rpy="0 0 0"/>
+      <geometry><box size="${plate_size_x} ${plate_size_y} ${plate_thickness}"/></geometry>
+      <material name="tool_plate"><color rgba="0.22 0.20 0.18 1.0"/></material>
+    </visual>
+    <!-- black pen holder; the pen axis runs through it at z = tcp_z -->
+    <visual>
+      <origin xyz="${holder_center_x} 0 ${holder_z0 + holder_size_z / 2}" rpy="0 0 0"/>
+      <geometry><box size="${holder_size_x} ${holder_size_y} ${holder_size_z}"/></geometry>
+      <material name="tool_holder"><color rgba="0.06 0.06 0.06 1.0"/></material>
+    </visual>
+    <!-- green pen body from the holder along +x -->
+    <visual>
+      <origin xyz="${holder_end_x + pen_length / 2} 0 ${tcp_z}" rpy="0 ${pi / 2} 0"/>
       <geometry><cylinder radius="${pen_radius}" length="${pen_length}"/></geometry>
-      <material name="pen"><color rgba="0.10 0.20 0.70 1.0"/></material>
+      <material name="pen"><color rgba="0.05 0.45 0.25 1.0"/></material>
     </visual>
-    <!-- pen tip ending exactly at the TCP -->
+    <!-- light pen tip ending exactly at the TCP -->
     <visual>
-      <origin xyz="${tcp_x} 0 ${tcp_z - tip_length / 2}" rpy="0 0 0"/>
+      <origin xyz="${tcp_x - tip_length / 2} 0 ${tcp_z}" rpy="0 ${pi / 2} 0"/>
       <geometry><cylinder radius="${tip_radius}" length="${tip_length}"/></geometry>
-      <material name="pen_tip"><color rgba="0.05 0.05 0.05 1.0"/></material>
+      <material name="pen_tip"><color rgba="0.92 0.92 0.90 1.0"/></material>
     </visual>
     <collision>
-      <origin xyz="${box_center_x} 0 ${box_height / 2}" rpy="0 0 0"/>
-      <geometry><box size="${box_length} ${box_width} ${box_height}"/></geometry>
+      <origin xyz="0 0 ${ring_length / 2}" rpy="0 0 0"/>
+      <geometry><cylinder radius="${ring_radius}" length="${ring_length}"/></geometry>
     </collision>
     <collision>
-      <origin xyz="${tcp_x} 0 ${(box_height + tcp_z - pen_clearance) / 2}" rpy="0 0 0"/>
-      <geometry><cylinder radius="${pen_radius}" length="${tcp_z - pen_clearance - box_height}"/></geometry>
+      <origin xyz="0 0 ${plate_z0 + plate_thickness / 2}" rpy="0 0 0"/>
+      <geometry><box size="${plate_size_x} ${plate_size_y} ${plate_thickness}"/></geometry>
+    </collision>
+    <collision>
+      <origin xyz="${holder_center_x} 0 ${holder_z0 + holder_size_z / 2}" rpy="0 0 0"/>
+      <geometry><box size="${holder_size_x} ${holder_size_y} ${holder_size_z}"/></geometry>
+    </collision>
+    <!-- pen collision stops pen_clearance before the tip, so pen-down poses are not collisions -->
+    <collision>
+      <origin xyz="${(holder_end_x + tcp_x - pen_clearance) / 2} 0 ${tcp_z}" rpy="0 ${pi / 2} 0"/>
+      <geometry><cylinder radius="${pen_radius}" length="${tcp_x - pen_clearance - holder_end_x}"/></geometry>
     </collision>
   </link>
 
@@ -125,10 +178,11 @@
     <origin xyz="0 0 0" rpy="0 0 0"/>
   </joint>
 
+  <!-- TCP at the pen tip; rpy 0 pi/2 0 turns tcp z onto tool0 +x (along the pen) -->
   <joint name="spindle_to_tcp" type="fixed">
     <parent link="spindle_body"/>
     <child link="tcp"/>
-    <origin xyz="${tcp_x} 0 ${tcp_z}" rpy="0 0 0"/>
+    <origin xyz="${tcp_x} 0 ${tcp_z}" rpy="0 ${pi / 2} 0"/>
   </joint>
 <!-- we do not need a joint between a pedestal and robot: ur_robot parent="pedestal_link" creates it -->
 
@@ -163,21 +217,21 @@
     <origin xyz="0 0 ${pedestal_height}" rpy="0 0 0"/>
   </xacro:ur_robot>
 
-  <!-- Work table carrying the paper; top surface = drawing plane (z = table_top_z) -->
+  <!-- Work table under the pedestal and the paper; top surface = drawing plane (z = table_top_z) -->
   <link name="table_link">
     <visual>
-      <origin xyz="${paper_x} ${paper_y} ${table_top_z - table_thickness/2}" rpy="0 0 0"/>
+      <origin xyz="${table_center_x} ${table_center_y} ${table_top_z - table_thickness/2}" rpy="0 0 0"/>
       <geometry><box size="${table_length_x} ${table_width_y} ${table_thickness}"/></geometry>
-      <material name="table"><color rgba="0.75 0.75 0.78 1.0"/></material>
+      <material name="table"><color rgba="0.62 0.60 0.56 1.0"/></material>
     </visual>
     <collision>
-      <origin xyz="${paper_x} ${paper_y} ${table_top_z - table_thickness/2}" rpy="0 0 0"/>
+      <origin xyz="${table_center_x} ${table_center_y} ${table_top_z - table_thickness/2}" rpy="0 0 0"/>
       <geometry><box size="${table_length_x} ${table_width_y} ${table_thickness}"/></geometry>
     </collision>
     <!-- keep-out zone below the table top (collision only, see keepout_size) -->
     <collision>
-      <origin xyz="0 0 ${(table_top_z - keepout_margin) / 2}" rpy="0 0 0"/>
-      <geometry><box size="${keepout_size} ${keepout_size} ${table_top_z - keepout_margin}"/></geometry>
+      <origin xyz="0 0 ${table_top_z - (keepout_depth + keepout_margin) / 2}" rpy="0 0 0"/>
+      <geometry><box size="${keepout_size} ${keepout_size} ${keepout_depth - keepout_margin}"/></geometry>
     </collision>
   </link>
   <joint name="world_to_table" type="fixed">
