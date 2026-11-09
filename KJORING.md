@@ -132,15 +132,25 @@ I *Planning*-fanen:
 - **Plan** (ikke Plan & Execute). Se på banen: rolig opp, ikke mot bordet, ikke rundt sokkelen.
 - Bare hvis banen ser rolig ut: **Execute**, med hånden på nødstoppen.
 
-### 7. Berøringstest (sjekk at arket er på z = 0)
+### 7. Berøringstest: roboten setter pennen på arket ved z = 0
 
-1. **Stop** programmet på pendanten (ROS slipper roboten).
-2. Jogg pennen sakte på pendanten til den så vidt rører midten av arket.
-3. I T3: `timeout 3 ros2 run tf2_ros tf2_echo world tcp | grep -m1 Translation`
-   Forventet ca. **x 0,50, y 0,06, z 0,000 ± 0,002**.
-4. Jogg pennen opp igjen et par centimeter, og trykk **Play** på pendanten.
+`touch_test` går i rette linjer til 3 cm over midten av arket, så 5 mm over, så ned til z = 0 og opp igjen.
+Den venter på Enter før de to stegene nedover. Ctrl+C avbryter.
 
-Avviker z mer enn et par millimeter: ikke tegn. Juster `pedestal_height` i xacroen (z for høy → senk den), bygg og start på nytt.
+```bash
+ros2 run mas248_project touch_test               # bare planlegging
+ros2 run mas248_project touch_test --execute     # beveger roboten
+```
+
+Mens pennen er nede (før siste Enter), i en annen terminal:
+
+```bash
+timeout 3 ros2 run tf2_ros tf2_echo world tcp | grep -m1 Translation
+```
+
+Pennen skal så vidt treffe arket. Bøyer den seg eller stopper roboten (protective stop): bordet ligger høyere enn
+modellen. Prøv `--z 0.002` og juster `pedestal_height` i xacroen (senk den med avviket), bygg og start på nytt.
+Treffer den ikke arket: øk `pedestal_height` tilsvarende.
 
 ### 8. T3: tegn
 

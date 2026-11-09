@@ -27,6 +27,7 @@ setup(
         'console_scripts': [
             'run_picture = mas248_project.run_picture:main',
             'pen_trace = mas248_project.pen_trace:main',
+            'touch_test = mas248_project.touch_test:main',
         ],
     },
 )
