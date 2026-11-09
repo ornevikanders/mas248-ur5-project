@@ -174,7 +174,15 @@ def main():
                     log.error(f'{navn}: bare {svar.fraction * 100:.1f} % fra navaerende stilling. Avbryter.')
                     return
                 plan = svar.solution
-            pkt = plan.joint_trajectory.points
+            # Fjern punkter som ikke ligger senere i tid enn punktet for (for eksempel et
+            # startpunkt som er med to ganger): ellers nekter execute_trajectory hele banen.
+            pkt, forrige = [], -1.0
+            for p in plan.joint_trajectory.points:
+                t = p.time_from_start.sec + p.time_from_start.nanosec * 1e-9
+                if t > forrige:
+                    pkt.append(p)
+                    forrige = t
+            plan.joint_trajectory.points = pkt
             varighet = pkt[-1].time_from_start.sec + pkt[-1].time_from_start.nanosec * 1e-9 if pkt else 0.0
             if len(pkt) < 2 or varighet == 0.0:
                 # Roboten star allerede i malet: banen har ingen lengde og ingen tider, og
