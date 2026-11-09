@@ -31,7 +31,10 @@ def setup(context,*args,**kwargs):
     desc=render_description(ip,cal,**hardware)
     params=moveit_parameters(desc,ctl) # reads existing Lecture 9 YAML, SRDF, OMPL
     params['allow_trajectory_execution']=active
-    params['trajectory_execution.allowed_execution_duration_scaling']=2.0
+    # Pendant speed slider at e.g. 10 % makes the scaled controller run ~10x slower than planned:
+    # raise this (e.g. execution_duration_scaling:=12) instead of disabling the monitoring.
+    params['trajectory_execution.allowed_execution_duration_scaling']=float(
+        LaunchConfiguration('execution_duration_scaling').perform(context))
     params['trajectory_execution.allowed_goal_duration_margin']=1.0
     params['trajectory_execution.allowed_start_tolerance']=0.02
     # Execution-duration monitoring is valid with scaled control: do not disable casually.
@@ -52,6 +55,8 @@ def generate_launch_description():
       DeclareLaunchArgument('joint_controller',default_value='scaled_joint_trajectory_controller'),
       DeclareLaunchArgument('enable_execution',default_value='false',choices=['true','false']),
       DeclareLaunchArgument('launch_rviz',default_value='true',choices=['true','false']),
+      DeclareLaunchArgument('execution_duration_scaling',default_value='2.0',
+                            description='Allowed execution time / planned time. Use ~12 with the pendant slider at 10 %'),
       *[DeclareLaunchArgument(name,default_value=value) for name,value in HARDWARE_DEFAULTS.items()],
       OpaqueFunction(function=setup),
     ])
