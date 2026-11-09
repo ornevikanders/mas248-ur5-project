@@ -21,6 +21,7 @@ Kjor:  ros2 run mas248_project touch_test              (bare planlegg)
 """
 import argparse
 import math
+import time
 
 import rclpy
 from rclpy.node import Node
@@ -87,20 +88,31 @@ def main():
     ap.add_argument('--z', type=float, default=0.0, help='beroringshoyde i world (m), standard 0.0')
     ap.add_argument('--over', type=float, default=0.03, help='hoyde over beroringspunktet for start/slutt (m)')
     ap.add_argument('--cartesian', action='store_true', help='rette linjer i stedet for leddrom')
+    ap.add_argument('--direkte', action='store_true',
+                    help='rett ned og opp igjen i to bevegelser, uten mellomsteg og uten Enter')
+    ap.add_argument('--pause', type=float, default=2.0,
+                    help='sekunder pennen blir staende nede med --direkte')
     ap.add_argument('--execute', action='store_true', help='beveg roboten (venter pa Enter for nedstegene)')
     args = ap.parse_args()
 
     if args.z < LAVESTE_Z:
         raise SystemExit(f'--z {args.z} er under {LAVESTE_Z} m: avbryter')
 
-    steg = [
-        ('til 3 cm over arket', args.z + args.over, False),
-        ('til 1 cm over arket', args.z + 0.010, True),
-        ('til 5 mm over arket', args.z + 0.005, True),
-        ('til 3 mm over arket', args.z + 0.003, True),
-        ('ned til beroring', args.z, True),
-        ('opp igjen', args.z + args.over, False),
-    ]
+    if args.direkte:   # en bevegelse ned og en opp, ingen mellomsteg og ingen Enter
+        steg = [
+            ('til 3 cm over arket', args.z + args.over, False),
+            ('rett ned', args.z, False),
+            ('opp igjen', args.z + args.over, False),
+        ]
+    else:
+        steg = [
+            ('til 3 cm over arket', args.z + args.over, False),
+            ('til 1 cm over arket', args.z + 0.010, True),
+            ('til 5 mm over arket', args.z + 0.005, True),
+            ('til 3 mm over arket', args.z + 0.003, True),
+            ('ned til beroring', args.z, True),
+            ('opp igjen', args.z + args.over, False),
+        ]
     modus = 'rett linje' if args.cartesian else 'leddrom'
 
     rclpy.init()
@@ -166,6 +178,9 @@ def main():
             varighet = pkt[-1].time_from_start.sec + pkt[-1].time_from_start.nanosec * 1e-9
             log.info(f'Kjorer: {navn} (z = {hoyde:.3f} m), {len(pkt)} punkter, planlagt {varighet:.2f} s ...')
             execute_trajectory(node, plan)
+            if args.direkte and navn == 'rett ned':
+                log.info(f'Pennen er nede: venter {args.pause:.1f} s for den loftes')
+                time.sleep(args.pause)
         log.info('Ferdig: pennen er oppe igjen.')
     except KeyboardInterrupt:
         log.warn('Avbrutt med Ctrl+C: ingen flere steg kjores.')
