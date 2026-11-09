@@ -93,34 +93,37 @@
     </collision>
   </link>
 
-  <!-- Pen tool and TCP, expressed in tool0 (the UR tool flange, same frame as the pendant TCP:
-       z out of the flange). TCP position measured in the lab 2026-11-09: x = 0.10 m, z = 0.065 m.
-       The pen does NOT point out of the flange: it hangs from the holder at right angles to the
-       flange, along tool0 +x (photo of the lab cell). The TCP frame is therefore turned 90 deg
-       about tool0 y so that tcp z points along the pen towards the tip; image_to_targets then
-       points tcp z down into the paper. If the pendant TCP shows a rotation, use that instead.
+  <!-- Pen tool and TCP, expressed in tool0 (the UR tool flange: z out of the flange).
+       Checked on the real robot 2026-11-09: in the pose where the real pen points straight down,
+       ROS reported tool0 at (-0.516, -0.056, -0.107) m in base (model: -0.517, -0.057, -0.107)
+       and tool0 +y pointing straight down. So the pen runs along tool0 +y, at right angles to
+       the flange. TCP measured in the lab: 0.10 m along the pen, 0.065 m out from the flange.
+       The TCP frame has z along the pen (towards the tip) and x along -tool0 z, so with
+       image_to_targets (tcp z down, tcp x = world x) the flange faces the robot as in the lab.
        Tool sizes are NOT measured (placeholders read from the photo):
          adapter ring on the flange, gripper plate, black pen holder box, green pen, light tip. -->
-  <xacro:property name="tcp_x" value="0.10"/>
-  <xacro:property name="tcp_z" value="0.065"/>
+  <xacro:property name="tcp_along_pen" value="0.10"/>
+  <xacro:property name="tcp_z"         value="0.065"/>
   <xacro:property name="ring_radius"     value="0.032"/>
   <xacro:property name="ring_length"     value="0.020"/>
-  <xacro:property name="plate_size_x"    value="0.075"/>
-  <xacro:property name="plate_size_y"    value="0.060"/>
+  <xacro:property name="plate_size_pen"  value="0.075"/>  <!-- along the pen (tool0 y) -->
+  <xacro:property name="plate_size_side" value="0.060"/>  <!-- across (tool0 x) -->
   <xacro:property name="plate_thickness" value="0.020"/>
-  <xacro:property name="holder_size_x"   value="0.060"/>
-  <xacro:property name="holder_size_y"   value="0.055"/>
-  <xacro:property name="holder_size_z"   value="0.050"/>
-  <xacro:property name="holder_center_x" value="0.005"/>
+  <xacro:property name="holder_size_pen"  value="0.060"/>
+  <xacro:property name="holder_size_side" value="0.055"/>
+  <xacro:property name="holder_size_z"    value="0.050"/>
+  <xacro:property name="holder_center"    value="0.005"/>  <!-- holder centre along the pen -->
   <xacro:property name="pen_radius"      value="0.0075"/>
   <xacro:property name="tip_radius"      value="0.003"/>
   <xacro:property name="tip_length"      value="0.012"/>
   <xacro:property name="pen_clearance"   value="0.008"/>
   <!-- derived -->
-  <xacro:property name="plate_z0"     value="${ring_length}"/>
-  <xacro:property name="holder_z0"    value="${ring_length + plate_thickness}"/>
-  <xacro:property name="holder_end_x" value="${holder_center_x + holder_size_x / 2}"/>
-  <xacro:property name="pen_length"   value="${tcp_x - tip_length - holder_end_x}"/>
+  <xacro:property name="plate_z0"   value="${ring_length}"/>
+  <xacro:property name="holder_z0"  value="${ring_length + plate_thickness}"/>
+  <xacro:property name="holder_end" value="${holder_center + holder_size_pen / 2}"/>
+  <xacro:property name="pen_length" value="${tcp_along_pen - tip_length - holder_end}"/>
+  <!-- a cylinder lies along +y after rolling it -90 deg about x -->
+  <xacro:property name="along_pen" value="${-pi / 2} 0 0"/>
 
   <link name="spindle_body">
     <!-- adapter ring on the flange -->
@@ -132,24 +135,24 @@
     <!-- gripper plate -->
     <visual>
       <origin xyz="0 0 ${plate_z0 + plate_thickness / 2}" rpy="0 0 0"/>
-      <geometry><box size="${plate_size_x} ${plate_size_y} ${plate_thickness}"/></geometry>
+      <geometry><box size="${plate_size_side} ${plate_size_pen} ${plate_thickness}"/></geometry>
       <material name="tool_plate"><color rgba="0.22 0.20 0.18 1.0"/></material>
     </visual>
     <!-- black pen holder; the pen axis runs through it at z = tcp_z -->
     <visual>
-      <origin xyz="${holder_center_x} 0 ${holder_z0 + holder_size_z / 2}" rpy="0 0 0"/>
-      <geometry><box size="${holder_size_x} ${holder_size_y} ${holder_size_z}"/></geometry>
+      <origin xyz="0 ${holder_center} ${holder_z0 + holder_size_z / 2}" rpy="0 0 0"/>
+      <geometry><box size="${holder_size_side} ${holder_size_pen} ${holder_size_z}"/></geometry>
       <material name="tool_holder"><color rgba="0.06 0.06 0.06 1.0"/></material>
     </visual>
-    <!-- green pen body from the holder along +x -->
+    <!-- green pen body from the holder along +y -->
     <visual>
-      <origin xyz="${holder_end_x + pen_length / 2} 0 ${tcp_z}" rpy="0 ${pi / 2} 0"/>
+      <origin xyz="0 ${holder_end + pen_length / 2} ${tcp_z}" rpy="${along_pen}"/>
       <geometry><cylinder radius="${pen_radius}" length="${pen_length}"/></geometry>
       <material name="pen"><color rgba="0.05 0.45 0.25 1.0"/></material>
     </visual>
     <!-- light pen tip ending exactly at the TCP -->
     <visual>
-      <origin xyz="${tcp_x - tip_length / 2} 0 ${tcp_z}" rpy="0 ${pi / 2} 0"/>
+      <origin xyz="0 ${tcp_along_pen - tip_length / 2} ${tcp_z}" rpy="${along_pen}"/>
       <geometry><cylinder radius="${tip_radius}" length="${tip_length}"/></geometry>
       <material name="pen_tip"><color rgba="0.92 0.92 0.90 1.0"/></material>
     </visual>
@@ -159,16 +162,16 @@
     </collision>
     <collision>
       <origin xyz="0 0 ${plate_z0 + plate_thickness / 2}" rpy="0 0 0"/>
-      <geometry><box size="${plate_size_x} ${plate_size_y} ${plate_thickness}"/></geometry>
+      <geometry><box size="${plate_size_side} ${plate_size_pen} ${plate_thickness}"/></geometry>
     </collision>
     <collision>
-      <origin xyz="${holder_center_x} 0 ${holder_z0 + holder_size_z / 2}" rpy="0 0 0"/>
-      <geometry><box size="${holder_size_x} ${holder_size_y} ${holder_size_z}"/></geometry>
+      <origin xyz="0 ${holder_center} ${holder_z0 + holder_size_z / 2}" rpy="0 0 0"/>
+      <geometry><box size="${holder_size_side} ${holder_size_pen} ${holder_size_z}"/></geometry>
     </collision>
     <!-- pen collision stops pen_clearance before the tip, so pen-down poses are not collisions -->
     <collision>
-      <origin xyz="${(holder_end_x + tcp_x - pen_clearance) / 2} 0 ${tcp_z}" rpy="0 ${pi / 2} 0"/>
-      <geometry><cylinder radius="${pen_radius}" length="${tcp_x - pen_clearance - holder_end_x}"/></geometry>
+      <origin xyz="0 ${(holder_end + tcp_along_pen - pen_clearance) / 2} ${tcp_z}" rpy="${along_pen}"/>
+      <geometry><cylinder radius="${pen_radius}" length="${tcp_along_pen - pen_clearance - holder_end}"/></geometry>
     </collision>
   </link>
 
@@ -178,11 +181,12 @@
     <origin xyz="0 0 0" rpy="0 0 0"/>
   </joint>
 
-  <!-- TCP at the pen tip; rpy 0 pi/2 0 turns tcp z onto tool0 +x (along the pen) -->
+  <!-- TCP at the pen tip. rpy (-pi/2, pi/2, 0): tcp z = tool0 +y (along the pen),
+       tcp x = -tool0 z, tcp y = -tool0 x. -->
   <joint name="spindle_to_tcp" type="fixed">
     <parent link="spindle_body"/>
     <child link="tcp"/>
-    <origin xyz="${tcp_x} 0 ${tcp_z}" rpy="0 ${pi / 2} 0"/>
+    <origin xyz="0 ${tcp_along_pen} ${tcp_z}" rpy="${-pi / 2} ${pi / 2} 0"/>
   </joint>
 <!-- we do not need a joint between a pedestal and robot: ur_robot parent="pedestal_link" creates it -->
 
