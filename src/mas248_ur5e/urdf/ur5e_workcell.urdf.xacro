@@ -43,11 +43,13 @@
   <xacro:property name="keepout_size"   value="2.0"/>
   <xacro:property name="keepout_margin" value="0.01"/>
 
-  <!-- Paper: A4 lying on the table, centred on (paper_x, paper_y). Long side along world x;
-       swap the two values if the sheet is turned. Visual only (no collision), so the pen
-       can touch it; 1 mm thick so it shows on top of the table in RViz. -->
-  <xacro:property name="paper_size_x"    value="0.297"/>
-  <xacro:property name="paper_size_y"    value="0.210"/>
+  <!-- Paper: A4 lying on the table, centred on (paper_x, paper_y). Long side along world y
+       (across in front of the robot): x spans 0.325..0.535 m, so the near edge stays 22 cm
+       from the pedestal and the reach varies less than with the long side along x.
+       Place the real sheet the same way. Visual only (no collision), so the pen can touch it;
+       1 mm thick so it shows on top of the table in RViz. -->
+  <xacro:property name="paper_size_x"    value="0.210"/>
+  <xacro:property name="paper_size_y"    value="0.297"/>
   <xacro:property name="paper_thickness" value="0.001"/>
 
   <!-- Workcell root -->
