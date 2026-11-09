@@ -2,12 +2,14 @@
 
 Stegene, alle som rette linjer (cartesian) med pennen rett ned:
   1. til --over (3 cm) over punktet
-  2. til 5 mm over punktet          (venter pa Enter for)
-  3. ned til --z (beroring, z = 0)  (venter pa Enter for)
-  4. opp igjen til --over
+  2. til 1 cm over punktet          (venter pa Enter for)
+  3. til 5 mm over punktet          (venter pa Enter for)
+  4. til 3 mm over punktet          (venter pa Enter for)
+  5. ned til --z (beroring, z = 0)  (venter pa Enter for)
+  6. opp igjen til --over
 
 Standard: bare planlegging. Med --execute kjores stegene, og skriptet venter pa Enter
-for de to siste stegene nedover. Ctrl+C avbryter. Ha hand pa nodstoppen.
+for hvert steg nedover etter det forste. Ctrl+C avbryter. Ha hand pa nodstoppen.
 
 Kjor:  ros2 run mas248_project touch_test              (bare planlegg)
        ros2 run mas248_project touch_test --execute    (beveg roboten)
@@ -48,7 +50,9 @@ def main():
 
     steg = [
         ('til 3 cm over arket', args.z + args.over, False),
+        ('til 1 cm over arket', args.z + 0.010, True),
         ('til 5 mm over arket', args.z + 0.005, True),
+        ('til 3 mm over arket', args.z + 0.003, True),
         ('ned til beroring', args.z, True),
         ('opp igjen', args.z + args.over, False),
     ]

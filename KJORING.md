@@ -134,8 +134,8 @@ I *Planning*-fanen:
 
 ### 7. Berøringstest: roboten setter pennen på arket ved z = 0
 
-`touch_test` går i rette linjer til 3 cm over midten av arket, så 5 mm over, så ned til z = 0 og opp igjen.
-Den venter på Enter før de to stegene nedover. Ctrl+C avbryter.
+`touch_test` går i rette linjer til 3 cm over midten av arket, så 1 cm, 5 mm og 3 mm over, så ned til z = 0 og opp igjen.
+Den venter på Enter før hvert steg nedover etter det første. Ctrl+C avbryter.
 
 ```bash
 ros2 run mas248_project touch_test               # bare planlegging
