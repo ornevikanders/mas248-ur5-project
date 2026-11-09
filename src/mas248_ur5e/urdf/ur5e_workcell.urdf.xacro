@@ -19,10 +19,13 @@
   <!-- world = the table surface under the pedestal. The pedestal stands ON the table and the
        paper lies on the same table, so the drawing plane is z = 0 and the robot base is
        pedestal_height above it (photo of the lab cell 2026-11-09).
-       Pedestal: height measured in the lab (0.31 m, table to robot base). It is a round
+       Pedestal: height table to robot base, 0.304 m (see pedestal_height). It is a round
        aluminium column on a square foot plate with a round top plate; those sizes are
        NOT measured (placeholders read from the photo). -->
-  <xacro:property name="pedestal_height"      value="0.31"/>
+  <!-- 0.304 instead of the tape-measured 0.31: checked on the real robot 2026-11-09. In a pose
+       where the model put the pen tip 10.3 cm above the table, a ruler gave 9.7 cm, so the
+       robot base is about 6 mm lower above the table than first measured (ruler +-2 mm). -->
+  <xacro:property name="pedestal_height"      value="0.304"/>
   <xacro:property name="pedestal_radius"      value="0.08"/>
   <xacro:property name="pedestal_foot_size"   value="0.30"/>
   <xacro:property name="pedestal_foot_height" value="0.015"/>
