@@ -154,7 +154,17 @@ def main():
         for (navn, hoyde, sporr), plan in zip(steg, planer):
             if sporr:
                 input(f'\n>>> Trykk Enter for a ga {navn} (z = {hoyde:.3f} m), Ctrl+C for a avbryte: ')
-            log.info(f'Kjorer: {navn} (z = {hoyde:.3f} m) ...')
+            if args.cartesian:
+                # Planlegg steget pa nytt fra der roboten faktisk star na (ikke der forrige plan
+                # sluttet), ellers kan MoveIt avvise banen fordi starten avviker (feil -4).
+                svar = cartesian(node, [make_pose(args.x, args.y, hoyde)], jump_threshold=0.0)
+                if svar.fraction < 0.999:
+                    log.error(f'{navn}: bare {svar.fraction * 100:.1f} % fra navaerende stilling. Avbryter.')
+                    return
+                plan = svar.solution
+            pkt = plan.joint_trajectory.points
+            varighet = pkt[-1].time_from_start.sec + pkt[-1].time_from_start.nanosec * 1e-9
+            log.info(f'Kjorer: {navn} (z = {hoyde:.3f} m), {len(pkt)} punkter, planlagt {varighet:.2f} s ...')
             execute_trajectory(node, plan)
         log.info('Ferdig: pennen er oppe igjen.')
     except KeyboardInterrupt:
