@@ -35,7 +35,9 @@ def setup(context,*args,**kwargs):
     # raise this (e.g. execution_duration_scaling:=12) instead of disabling the monitoring.
     params['trajectory_execution.allowed_execution_duration_scaling']=float(
         LaunchConfiguration('execution_duration_scaling').perform(context))
-    params['trajectory_execution.allowed_goal_duration_margin']=1.0
+    # Fixed extra time (s) for start-up and settling on the real robot; raise for short moves.
+    params['trajectory_execution.allowed_goal_duration_margin']=float(
+        LaunchConfiguration('execution_duration_margin').perform(context))
     params['trajectory_execution.allowed_start_tolerance']=0.02
     # Execution-duration monitoring is valid with scaled control: do not disable casually.
     params['robot_description']=ParameterValue(desc,value_type=str)
@@ -57,6 +59,8 @@ def generate_launch_description():
       DeclareLaunchArgument('launch_rviz',default_value='true',choices=['true','false']),
       DeclareLaunchArgument('execution_duration_scaling',default_value='2.0',
                             description='Allowed execution time / planned time. Use ~12 with the pendant slider at 10 %'),
+      DeclareLaunchArgument('execution_duration_margin',default_value='1.0',
+                            description='Extra seconds allowed per trajectory (start-up and settling)'),
       *[DeclareLaunchArgument(name,default_value=value) for name,value in HARDWARE_DEFAULTS.items()],
       OpaqueFunction(function=setup),
     ])
