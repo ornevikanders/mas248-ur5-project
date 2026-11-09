@@ -11,6 +11,8 @@
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>tf2_ros</exec_depend>
   <exec_depend>visualization_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>moveit_msgs</exec_depend>
   <exec_depend>mas248_ur5e_demos</exec_depend>
   <exec_depend>mas248_ur5e_moveit_config</exec_depend>
   <exec_depend>launch</exec_depend>
