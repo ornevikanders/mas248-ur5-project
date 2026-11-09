@@ -175,9 +175,14 @@ def main():
                     return
                 plan = svar.solution
             pkt = plan.joint_trajectory.points
-            varighet = pkt[-1].time_from_start.sec + pkt[-1].time_from_start.nanosec * 1e-9
-            log.info(f'Kjorer: {navn} (z = {hoyde:.3f} m), {len(pkt)} punkter, planlagt {varighet:.2f} s ...')
-            execute_trajectory(node, plan)
+            varighet = pkt[-1].time_from_start.sec + pkt[-1].time_from_start.nanosec * 1e-9 if pkt else 0.0
+            if len(pkt) < 2 or varighet == 0.0:
+                # Roboten star allerede i malet: banen har ingen lengde og ingen tider, og
+                # execute_trajectory ville nektet a kjore den. Hopp over bevegelsen.
+                log.info(f'{navn}: allerede nadd (z = {hoyde:.3f} m), hopper over bevegelsen')
+            else:
+                log.info(f'Kjorer: {navn} (z = {hoyde:.3f} m), {len(pkt)} punkter, planlagt {varighet:.2f} s ...')
+                execute_trajectory(node, plan)
             if args.direkte and navn == 'rett ned':
                 log.info(f'Pennen er nede: venter {args.pause:.1f} s for den loftes')
                 time.sleep(args.pause)
