@@ -25,7 +25,7 @@ ANTALL_FORSOK = 3
 # arkets senter i world (x, y) og tegneflaten. Sokkelen og arket star pa samme bord,
 # og world er bordflaten, sa tegneflaten er z = 0 (robotfoten er 0.31 m over).
 # Fortegnet (positiv x og y) er bekreftet i labben 2026-11-09, se paper_x/paper_y i xacro-fila.
-ARK_SENTER = (0.43, 0.06)
+ARK_SENTER = (0.50, 0.06)
 TEGNEFLATE_Z = 0.0
 
 # Halv utstrekning rundt arksenteret (m). Dekker et A4-ark (0.297 x 0.210) uansett retning.

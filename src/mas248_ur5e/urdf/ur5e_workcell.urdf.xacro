@@ -29,11 +29,12 @@
   <xacro:property name="pedestal_top_radius"  value="0.10"/>
   <xacro:property name="pedestal_top_height"  value="0.015"/>
 
-  <!-- Paper centre in world: (+0.43, +0.06) m. Measured from the axis marks on the robot base
-       as (-0.43, -0.06); the marks follow UR's 'base' frame (teach pendant), which is rotated pi
+  <!-- Paper centre in world: (+0.50, +0.06) m (moved from x = 0.43 in the lab 2026-11-09).
+       First measured from the axis marks on the robot base as (-0.43, -0.06); the marks follow
+       UR's 'base' frame (teach pendant), which is rotated pi
        about z relative to ROS base_link/world, so x and y change sign.
        VERIFIED in the lab 2026-11-09: the paper lies at positive x and y in world. -->
-  <xacro:property name="paper_x" value="0.43"/>
+  <xacro:property name="paper_x" value="0.50"/>
   <xacro:property name="paper_y" value="0.06"/>
 
   <!-- Table: one table under both the pedestal and the paper; its top is world z = 0.
