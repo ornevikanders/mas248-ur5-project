@@ -93,6 +93,8 @@ def main():
     ap.add_argument('--pause', type=float, default=2.0,
                     help='sekunder pennen blir staende nede med --direkte')
     ap.add_argument('--execute', action='store_true', help='beveg roboten (venter pa Enter for nedstegene)')
+    ap.add_argument('--uten-start', action='store_true',
+                    help='hopp over forste steg (3 cm over): bruk bare nar pennen allerede star over punktet')
     args = ap.parse_args()
 
     if args.z < LAVESTE_Z:
@@ -114,6 +116,8 @@ def main():
             ('opp igjen', args.z + args.over, False),
         ]
     modus = 'rett linje' if args.cartesian else 'leddrom'
+    if args.uten_start:   # pennen star allerede over punktet: start rett pa neste steg
+        steg = steg[1:]
 
     rclpy.init()
     node = Node('mas248_touch_test')
