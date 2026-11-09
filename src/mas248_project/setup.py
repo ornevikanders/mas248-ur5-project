@@ -25,6 +25,7 @@ setup(
     entry_points={
         'console_scripts': [
             'run_picture = mas248_project.run_picture:main',
+            'pen_trace = mas248_project.pen_trace:main',
         ],
     },
 )
