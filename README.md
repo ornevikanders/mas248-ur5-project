@@ -276,6 +276,29 @@ Usikker? Spør i gruppa før du løser konflikten.
 printf '%s\n' 'src/mas248_ur5e_demos/' 'src/mas248_ur5e_moveit_config/' >> .git/info/exclude
 ```
 
+### Kurspakker og våre endringer i dem
+
+`mas248_ur5e_moveit_config` og `mas248_ur5e_demos` er utdelt kursmateriell (`Moveit_packages.zip` fra MAS248, forelesning 9) og ligger derfor ikke i repoet. Filene vi selv har laget eller endret i disse pakkene ligger i `kurspakke_endringer/`, med samme mappestruktur som i pakkene:
+
+| Fil | Hva |
+|---|---|
+| `mas248_ur5e_moveit_config/config/ur5e_workcell.srdf` | Endret: kollisjonspar for vår arbeidscelle |
+| `mas248_ur5e_demos/scripts/run_picture.py` | Nytt skript |
+| `mas248_ur5e_demos/scripts/show_targets_rviz.py` | Nytt skript |
+| `mas248_ur5e_demos/images/pumpkin_outline.png` | Nytt testbilde |
+| `mas248_ur5e_demos/setup.py` | Endret: registrerer de nye skriptene |
+
+Slik settes workspacet opp komplett:
+
+```bash
+cd ~/mas248_ws
+unzip Moveit_packages.zip -d src/          # kurspakkene fra emnesiden
+cp -r kurspakke_endringer/* src/           # legg våre endringer oppå
+colcon build --symlink-install
+```
+
+`calibration/ur5e_calibration.yaml` er kinematikk-kalibreringen hentet fra UR5e-en i labben.
+
 ```bash
 ros2 run mas248_ur5e_demos image_to_targets pumpkin_outline.jpg --tcp-offset-mm 30 \
   --center-x 0.50 --center-y 0.06 --center-z 0.0

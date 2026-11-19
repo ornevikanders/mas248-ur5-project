@@ -33,7 +33,7 @@ colcon build --symlink-install
 source install/setup.bash
 ```
 
-L9-pakkene (`mas248_ur5e_moveit_config`, `mas248_ur5e_demos`) og `calibration/` ligger ikke i Git og må finnes i workspacet fra før.
+L9-pakkene (`mas248_ur5e_moveit_config`, `mas248_ur5e_demos`) er kursmateriell og ligger ikke i Git. Pakk ut `Moveit_packages.zip` i `src/` og kopier våre endringer oppå med `cp -r kurspakke_endringer/* src/` (se README). `calibration/` ligger i repoet.
 
 ---
 
